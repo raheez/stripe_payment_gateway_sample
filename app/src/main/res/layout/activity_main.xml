@@ -7,16 +7,17 @@
 
 
 
-    <TextView
-        android:id="@+id/textView2"
+    <EditText
+        android:id="@+id/amount_edit_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="pay"
+        android:hint="enter the amount to pay"
+        android:inputType="number"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
-    </TextView>
+    </EditText>
 
 
     <Button
@@ -27,7 +28,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView2">
+        app:layout_constraintTop_toBottomOf="@+id/amount_edit_text">
 
     </Button>
 

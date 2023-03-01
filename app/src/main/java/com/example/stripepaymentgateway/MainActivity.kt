@@ -1,3 +1,5 @@
+package com.example.stripepaymentgateway
+
 import android.os.Bundle
 import android.util.AttributeSet
 import android.view.View
@@ -26,6 +28,8 @@ class MainActivity : AppCompatActivity() {
     var mCustomerID = ""
     var mEphemeralKey = ""
     var mClientSecret = ""
+    var mStrAmount = ""
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         mainBinding = ActivityMainBinding.inflate(layoutInflater)
@@ -34,19 +38,14 @@ class MainActivity : AppCompatActivity() {
         PaymentConfiguration.init(this, PUBLISH_KEY)
 
         paymentSheet = PaymentSheet(this, ::onPaymentSheetResult)
-        mainBinding?.buttonPay?.setOnClickListener {
-            paymemntFlow()
-        }
-
 
         var mStrRequest = object : StringRequest(com.android.volley.Request.Method.POST,
             "https://api.stripe.com/v1/customers", {
 
                 val mObject = JSONObject(it)
                 mCustomerID = mObject.getString("id")
-                Toast.makeText(this, "Customer-id obtained " + mCustomerID, Toast.LENGTH_SHORT)
-                    .show()
-                getEphermalKey()
+                //Toast.makeText(this, "Customer-id obtained " + mCustomerID, Toast.LENGTH_SHORT).show()
+                //getEphermalKey()
 
             },
             {
@@ -64,6 +63,15 @@ class MainActivity : AppCompatActivity() {
         val mRequestQueue = Volley.newRequestQueue(this)
         mRequestQueue.add(mStrRequest)
 
+        mainBinding?.buttonPay?.setOnClickListener {
+            mStrAmount = mainBinding?.amountEditText?.text?.toString()?:""
+            mStrAmount?.let {
+                if (mCustomerID?.isNotEmpty()!!){
+                    getEphermalKey()
+                }
+            }
+//            paymemntFlow()
+        }
         return setContentView(mainBinding.root)
 
     }
@@ -74,8 +82,7 @@ class MainActivity : AppCompatActivity() {
 
                 val mObject = JSONObject(it)
                 mEphemeralKey = mObject.getString("id")
-                Toast.makeText(this, "ephermal key obtained " + mEphemeralKey, Toast.LENGTH_SHORT)
-                    .show()
+                //Toast.makeText(this, "ephermal key obtained " + mEphemeralKey, Toast.LENGTH_SHORT).show()
 
                 getClientSecret(mCustomerID, mEphemeralKey)
             },
@@ -109,12 +116,8 @@ class MainActivity : AppCompatActivity() {
 
                 val mObject = JSONObject(it)
                 mClientSecret = mObject.getString("client_secret")
-                Toast.makeText(
-                    this,
-                    "client_secret key obtained " + mClientSecret,
-                    Toast.LENGTH_SHORT
-                )
-                    .show()
+              //  Toast.makeText(this, "client_secret key obtained " + mClientSecret, Toast.LENGTH_SHORT).show()
+                paymemntFlow()
 
             },
             {
@@ -132,7 +135,7 @@ class MainActivity : AppCompatActivity() {
             override fun getParams(): MutableMap<String, String>? {
                 val params = HashMap<String, String>()
                 params["customer"] = mCustomerID
-                params["amount"] = "350000"
+                params["amount"] = "${mStrAmount}"+"00"
                 params["currency"] = "aed"
                 params["automatic_payment_methods[enabled]"] = "true"
                 return params
@@ -165,6 +168,7 @@ class MainActivity : AppCompatActivity() {
             }
             is PaymentSheetResult.Completed -> {
                 // Display for example, an order confirmation screen
+                mainBinding?.amountEditText?.setText("")
                 print("Completed")
                 Toast.makeText(this, "completed", Toast.LENGTH_SHORT).show()
             }
