@@ -2,6 +2,7 @@ package com.example.stripepaymentgateway
 
 import android.os.Bundle
 import android.util.AttributeSet
+import android.util.Log
 import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -27,6 +28,7 @@ class MainActivity : AppCompatActivity() {
 
     var mCustomerID = ""
     var mEphemeralKey = ""
+    var mStrPaymentID = ""
     var mClientSecret = ""
     var mStrAmount = ""
 
@@ -63,6 +65,13 @@ class MainActivity : AppCompatActivity() {
         val mRequestQueue = Volley.newRequestQueue(this)
         mRequestQueue.add(mStrRequest)
 
+        initListeners()
+
+               return setContentView(mainBinding.root)
+
+    }
+
+    private fun initListeners() {
         mainBinding?.buttonPay?.setOnClickListener {
             mStrAmount = mainBinding?.amountEditText?.text?.toString()?:""
             mStrAmount?.let {
@@ -72,8 +81,14 @@ class MainActivity : AppCompatActivity() {
             }
 //            paymemntFlow()
         }
-        return setContentView(mainBinding.root)
 
+        mainBinding?.refundButton?.setOnClickListener {
+            mStrPaymentID?.let {
+                if (it.isNotEmpty()){
+                    getRefund()
+                }
+            }
+        }
     }
 
     private fun getEphermalKey() {
@@ -114,7 +129,10 @@ class MainActivity : AppCompatActivity() {
         var mStrRequest = object : StringRequest(com.android.volley.Request.Method.POST,
             "https://api.stripe.com/v1/payment_intents", {
 
+                Log.d("client_Secret","response_is"+it)
                 val mObject = JSONObject(it)
+
+                mStrPaymentID = mObject.getString("id")
                 mClientSecret = mObject.getString("client_secret")
               //  Toast.makeText(this, "client_secret key obtained " + mClientSecret, Toast.LENGTH_SHORT).show()
                 paymemntFlow()
@@ -138,6 +156,37 @@ class MainActivity : AppCompatActivity() {
                 params["amount"] = "${mStrAmount}"+"00"
                 params["currency"] = "aed"
                 params["automatic_payment_methods[enabled]"] = "true"
+                return params
+            }
+        };
+
+        val mRequestQueue = Volley.newRequestQueue(this)
+        mRequestQueue.add(mStrRequest)
+    }
+
+    private fun getRefund() {
+
+        var mStrRequest = object : StringRequest(com.android.volley.Request.Method.POST,
+            "https://api.stripe.com/v1/refunds", {
+
+                val mObject = JSONObject(it)
+                Log.d("REFUND","RESPONSE_IS"+it)
+              //  Toast.makeText(this, "client_secret key obtained " + mClientSecret, Toast.LENGTH_SHORT).show()
+                paymemntFlow()
+            },
+            {
+            }
+        ) {
+
+            override fun getHeaders(): MutableMap<String, String> {
+                val headers = HashMap<String, String>()
+                headers["Authorization"] = "Bearer " + SECRET_KEY
+                return headers
+            }
+
+            override fun getParams(): MutableMap<String, String>? {
+                val params = HashMap<String, String>()
+                params["payment_intent"] = mStrPaymentID
                 return params
             }
         };
